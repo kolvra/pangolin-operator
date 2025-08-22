@@ -48,6 +48,26 @@ spec:
                     port:
                       type: integer
                       description: Port of the service to expose
+            status:
+              type: object
+              properties:
+                resourceId:
+                  type: string
+                  description: The Pangolin resource ID
+                fqdn:
+                  type: string
+                  description: The full domain name
+                ready:
+                  type: boolean
+                  description: Whether the resource is ready
+                message:
+                  type: string
+                  description: Status message
+                createdAt:
+                  type: number
+                  description: Creation timestamp
+      subresources:
+        status: {}
   scope: Namespaced
   names:
     plural: pangoliningresses
