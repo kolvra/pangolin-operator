@@ -1,0 +1,9 @@
+# Directories
+old
+.venv
+
+# Python cache
+__pycache__
+
+# Environment variables
+.env

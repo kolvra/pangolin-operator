@@ -1,0 +1,14 @@
+apiVersion: pangolin.sparkfly.dev/v1alpha1
+kind: PangolinIngress
+metadata:
+  name: kubecost-entry
+  namespace: kubecost
+spec:
+  subdomain: kubecost
+  domain: mx-central-2.sparkfly.cloud
+  service:
+    name: cost-analyzer
+    port: 9090
+    namespace: kubecost
+  ssl: false
+  sso: true

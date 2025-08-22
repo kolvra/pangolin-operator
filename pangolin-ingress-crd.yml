@@ -1,0 +1,57 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: pangoliningresses.pangolin.sparkfly.dev
+spec:
+  group: pangolin.sparkfly.dev
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - domain
+                - subdomain
+                - service
+              properties:
+                domain:
+                  type: string
+                  description: The domain managed by Pangolin
+                subdomain:
+                  type: string
+                  description: The subdomain to expose via Pangolin
+                ssl:
+                  type: boolean
+                  default: true
+                  description: Whether SSL should be enabled
+                sso:
+                  type: boolean
+                  default: false
+                  description: Whether SSO is required
+                service:
+                  type: object
+                  required:
+                    - name
+                    - port
+                  properties:
+                    name:
+                      type: string
+                      description: The Kubernetes service name
+                    namespace:
+                      type: string
+                      description: Optional namespace of the service (defaults to CR namespace)
+                    port:
+                      type: integer
+                      description: Port of the service to expose
+  scope: Namespaced
+  names:
+    plural: pangoliningresses
+    singular: pangoliningress
+    kind: PangolinIngress
+    shortNames:
+      - pgli
