@@ -292,7 +292,7 @@ def update_fn(spec, old, new, name, namespace, patch, logger, **_kwargs):
             struct_logger.info("Resource needs recreation due to spec changes")
 
             # Primero eliminar el viejo
-            delete_fn(old_spec, name, logger)
+            delete_fn(old_spec, name, namespace, patch, logger)
 
             # Luego crear el nuevo
             return create_fn(spec, name, namespace, patch, logger)
@@ -367,10 +367,10 @@ def health_check(**_kwargs):
     """Check if Pangolin API is accessible."""
     try:
         # Simple health check - intentar acceder a la API
-        response = requests.get(f"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources",
-                                headers=HEADERS, timeout=5)
+        response = requests.get(
+            f"{PANGOLIN_API_URL}", headers=HEADERS, timeout=5)
         return response.status_code == 200
-    except:
+    except requests.RequestException:
         return False
 
 
