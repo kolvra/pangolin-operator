@@ -102,49 +102,41 @@ def delete_resource(resource_id: str):
 
 
 @kopf.on.create('pangolin.sparkfly.dev', 'v1alpha1', 'pangoliningresses')
-def create_fn(spec, name, namespace, logger, **kwargs):
+def create_fn(spec, name, namespace, logger, **_kwargs):
     """Create a new resource in Pangolin API."""
-    subdomain = spec['subdomain']
-    domain = spec['domain']
     service = spec['service']
     ssl = spec.get('ssl', False)
-    sso = spec.get('sso', False)
+    fqdn = f"{spec['subdomain']}.{spec['domain']}"
 
-    fqdn = f"{subdomain}.{domain}"
-    service_host = f"{service['name']}.{service.get('namespace', namespace)}.svc.cluster.local:{service['port']}"
+    logger.info(f"Creating Pangolin resource for {fqdn}")
 
-    logger.info(f"Creating Pangolin resource for {fqdn} -> {service_host}")
-
-    resource_data = {
+    created = create_resource({
         "name": f"k8s.po-{name}",
-        "subdomain": subdomain,
-        # "isBaseDomain": False,
+        "subdomain": spec['subdomain'],
         "siteId": int(SITE_ID),
         "http": True,
         "protocol": "tcp",
         "domainId": DOMAIN_ID
-    }
+    }, sso=spec.get('sso', False))
 
-    created = create_resource(resource_data, sso=sso)
     if not created:
         raise kopf.TemporaryError(
             "Failed to create Pangolin resource", delay=30)
 
-    local_domain = f"{spec.get('service', {}).get('name', name)}.{spec.get('service', {}).get('namespace', namespace)}.svc.cluster.local"
-
-    target_data = {
-        "ip": local_domain,
-        "port": spec.get("service", {}).get("port", 80),
+    service_name = service.get('name', name)
+    service_namespace = service.get('namespace', namespace)
+    add_target_to_resource(created.get("resourceId"), {
+        "ip": f"{service_name}.{service_namespace}.svc.cluster.local",
+        "port": service.get("port", 80),
         "method": "https" if ssl else "http",
         "enabled": True,
-    }
+    })
 
-    add_target_to_resource(created.get("resourceId"), target_data)
     logger.info(f"Successfully registered {fqdn} in Pangolin")
 
 
 @kopf.on.delete('pangolin.sparkfly.dev', 'v1alpha1', 'pangoliningresses')
-def delete_fn(spec, name, logger, **kwargs):
+def delete_fn(spec, name, logger, **_kwargs):
     """Delete a resource in Pangolin API."""
     subdomain = spec['subdomain']
     domain = spec['domain']
