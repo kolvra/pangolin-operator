@@ -9,22 +9,25 @@ Este directorio contiene los workflows de GitHub Actions para el proyecto Pangol
 **Propósito**: Workflow único que maneja tanto builds manuales como releases oficiales.
 
 **Se ejecuta cuando**:
-- Se crean tags que empiecen con `v` (release automático)
-- Manualmente via `workflow_dispatch` (con tag opcional)
+- Push a ramas `main` o `develop` (build y push)
+- Pull requests hacia `main` (solo build para testing)
+- Tags que empiecen con `v*` (release automático)
+- Manualmente via `workflow_dispatch` (con opciones avanzadas)
 
 **Lo que hace**:
-- Construye la imagen Docker usando **Kaniko** (rootless, diseñado para Kubernetes)
-- Sube la imagen al GitHub Container Registry (`ghcr.io`)
-- Genera tags apropiados basados en el evento que lo disparó
-- Utiliza cache de Kaniko para builds más rápidos
-- Genera attestations de seguridad para la imagen
-- Se ejecuta en tu cluster K3s usando ARC runners
-- **Crea releases de GitHub automáticamente** para tags oficiales
+- 🏗️ **Multi-arch builds**: Construye para AMD64 y ARM64 simultáneamente
+- 🐳 **Smart pushing**: Push automático excepto en PRs
+- 🔒 **Security scanning**: Escaneo de vulnerabilidades con Trivy
+- 📋 **SBOM generation**: Software Bill of Materials automático
+- 🛡️ **Build attestations**: Verificaciones criptográficas firmadas
+- ⚡ **GitHub Actions cache**: Cache distribuido para builds ultra-rápidos
+- 📝 **Auto-releases**: Releases de GitHub automáticos para tags
 
-**Tags generados**:
-- **Para releases** (tags `v*`): `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`
-- **Para manual con tag**: `custom-tag`, `latest` (si no es un tag especial)
-- **Para manual sin tag**: `manual-YYYYMMDD-HHMMSS`
+**Tags generados automáticamente**:
+- **Branches**: `main`, `develop`, `main-abc1234`
+- **PRs**: `pr-123`
+- **Tags semver**: `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`
+- **Manual**: Tags personalizados o `latest`
 
 ### 2. `demo.yaml` - Demo con Self-Hosted Runners
 
@@ -32,23 +35,24 @@ Este directorio contiene los workflows de GitHub Actions para el proyecto Pangol
 
 ## Tecnologías Utilizadas
 
-### Kaniko para Builds Rootless en Kubernetes
+### Docker Buildx con GitHub Actions
 
-El workflow utiliza **Kaniko** para construir imágenes Docker de manera segura en contenedores:
+El workflow utiliza las **mejores prácticas oficiales de GitHub** con Docker Buildx:
 
-**Ventajas de Kaniko**:
-- 🔒 **Rootless**: No requiere privilegios root ni Docker daemon
-- 🛡️ **Kubernetes-native**: Diseñado específicamente para contenedores
-- 🚀 **Simple**: Una sola imagen con todas las herramientas necesarias
-- 📦 **Compatible**: Funciona con cualquier registry estándar
-- ⚡ **Eficiente**: Cache integrado y builds optimizados
-- 🔧 **Reliable**: Mantenido activamente por Google
+**Características Premium**:
+- 🏗️ **Multi-arquitectura**: Soporte nativo para AMD64 y ARM64
+- 🔒 **Seguridad avanzada**: Trivy vulnerability scanning
+- 📋 **SBOM**: Software Bill of Materials automático
+- 🛡️ **Attestations**: Build provenance y verificaciones firmadas
+- ⚡ **GitHub Actions Cache**: Cache distribuido ultra-rápido
+- 🎯 **Smart tagging**: Tags automáticos según evento
 
-**Configuración**:
-- Imagen: `gcr.io/kaniko-project/executor:debug`
-- Cache habilitado con TTL de 24 horas
-- Autenticación via credenciales de GitHub
-- Ejecuta como usuario root dentro del contenedor (seguro)
+**Configuración optimizada**:
+- Runners: `ubuntu-latest` (GitHub-hosted)
+- BuildKit con QEMU para cross-platform builds
+- Cache: GitHub Actions cache (type=gha)
+- Security: Trivy + GitHub Security tab integration
+- Provenance: Firmado con GitHub OIDC
 
 ## Configuración Requerida
 

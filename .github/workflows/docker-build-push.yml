@@ -2,13 +2,24 @@ name: Build and Push Docker Image
 
 on:
   push:
+    branches:
+      - main
+      - develop
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (optional for manual builds)'
+        description: 'Custom tag for manual builds'
         required: false
+        type: string
+      platforms:
+        description: 'Target platforms (comma separated)'
+        required: false
+        default: 'linux/amd64,linux/arm64'
         type: string
 
 env:
@@ -17,10 +28,12 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
+      id-token: write  # Para attestations
+      attestations: write
     
     steps:
       - name: Checkout repository
@@ -28,145 +41,144 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract version info
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
-            VERSION="${{ github.event.inputs.tag }}"
-          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-          else
-            VERSION="manual-$(date +%Y%m%d-%H%M%S)"
-          fi
-          VERSION_CLEAN=${VERSION#v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "version_clean=${VERSION_CLEAN}" >> $GITHUB_OUTPUT
-          echo "is_release=${{ startsWith(github.ref, 'refs/tags/') }}" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64' }}
+          driver-opts: |
+            network=host
 
-      - name: Generate tags and labels
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
         id: meta
-        run: |
-          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-          VERSION_CLEAN="${{ steps.version.outputs.version_clean }}"
-          
-          # Generar tags basados en el tipo de build
-          if [[ "${{ steps.version.outputs.is_release }}" == "true" ]]; then
-            # Es un release oficial
-            TAGS="$IMAGE_NAME:$VERSION_CLEAN,$IMAGE_NAME:latest"
-            
-            # Si es versión semántica, agregar tags adicionales
-            if [[ $VERSION_CLEAN =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              MAJOR=$(echo $VERSION_CLEAN | cut -d. -f1)
-              MINOR=$(echo $VERSION_CLEAN | cut -d. -f1-2)
-              TAGS="$TAGS,$IMAGE_NAME:$MAJOR,$IMAGE_NAME:$MINOR"
-            fi
-          else
-            # Build manual o con tag custom
-            TAGS="$IMAGE_NAME:$VERSION_CLEAN"
-            if [[ "$VERSION_CLEAN" != "latest" && "$VERSION_CLEAN" != manual-* ]]; then
-              TAGS="$TAGS,$IMAGE_NAME:latest"
-            fi
-          fi
-          
-          # Labels estándar OCI
-          LABELS="org.opencontainers.image.title=${{ github.repository }}"
-          LABELS="$LABELS,org.opencontainers.image.description=Pangolin Operator for Kubernetes"
-          LABELS="$LABELS,org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}"
-          LABELS="$LABELS,org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
-          LABELS="$LABELS,org.opencontainers.image.revision=${{ github.sha }}"
-          LABELS="$LABELS,org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.event_name == 'workflow_dispatch' }}
+          labels: |
+            org.opencontainers.image.title=${{ github.repository }}
+            org.opencontainers.image.description=Pangolin Operator for Kubernetes
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}#readme
+            org.opencontainers.image.licenses=MIT
 
-      - name: Set up registry credentials
-        run: |
-          mkdir -p $HOME/.docker
-          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > $HOME/.docker/config.json
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ github.event.inputs.platforms || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: mode=max
+          sbom: true
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
-      - name: Build and push with Kaniko
-        run: |
-          # Preparar argumentos para Kaniko
-          IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-          DESTINATIONS=""
-          for tag in "${TAG_ARRAY[@]}"; do
-            DESTINATIONS="$DESTINATIONS --destination=$tag"
-          done
-          
-          # Preparar labels para Kaniko
-          IFS=',' read -ra LABEL_ARRAY <<< "${{ steps.meta.outputs.labels }}"
-          LABEL_ARGS=""
-          for label in "${LABEL_ARRAY[@]}"; do
-            LABEL_ARGS="$LABEL_ARGS --label=$label"
-          done
-          
-          # Verificar si docker está disponible, si no usar podman
-          if command -v docker >/dev/null 2>&1; then
-            CONTAINER_CMD="docker"
-          elif command -v podman >/dev/null 2>&1; then
-            CONTAINER_CMD="podman"
-          else
-            echo "Neither docker nor podman found. Installing podman..."
-            # Para sistemas basados en Debian/Ubuntu
-            sudo apt-get update && sudo apt-get install -y podman
-            CONTAINER_CMD="podman"
-          fi
-          
-          # Construir y subir con Kaniko usando el runtime disponible
-          $CONTAINER_CMD run --rm \
-            -v $PWD:/workspace \
-            -v $HOME/.docker:/kaniko/.docker:ro \
-            -w /workspace \
-            gcr.io/kaniko-project/executor:debug \
-            --context=/workspace \
-            --dockerfile=/workspace/Dockerfile \
-            --cache=true \
-            --cache-ttl=24h \
-            --build-arg=BUILDKIT_INLINE_CACHE=1 \
-            $LABEL_ARGS \
-            $DESTINATIONS
+      - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
 
-      - name: Get image digest
-        id: digest
-        run: |
-          # Obtener el primer tag construido para extraer el digest
-          MAIN_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1)
-          echo "main_tag=$MAIN_TAG" >> $GITHUB_OUTPUT
-          # Por ahora usamos un placeholder hasta que Kaniko exponga el digest
-          echo "digest=sha256:placeholder" >> $GITHUB_OUTPUT
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
 
       - name: Generate artifact attestation
+        if: github.event_name != 'pull_request'
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.digest.outputs.digest }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Generate SBOM
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Generate SBOM attestation
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-sbom@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          sbom-path: sbom.spdx.json
           push-to-registry: true
 
       - name: Create GitHub Release
-        if: steps.version.outputs.is_release == 'true'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Release ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
           body: |
             ## 🐳 Docker Images
             
-            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_clean }}`
-            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
-            
-            ## 🚀 Installation
+            This release is available as a multi-architecture Docker image:
             
             ```bash
-            # Pull the image
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_clean }}
-            
-            # Deploy to Kubernetes
-            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/deployment.yaml
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ```
+            
+            ### 🏗️ Supported Architectures
+            - `linux/amd64` (Intel/AMD 64-bit)
+            - `linux/arm64` (ARM 64-bit)
+            
+            ### 🚀 Quick Start
+            
+            ```bash
+            # Pull the latest image
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Run the operator
+            kubectl apply -f https://raw.githubusercontent.com/${{ github.repository }}/main/pangolin-ingress-crd.yml
+            ```
+            
+            ### 🔒 Security
+            
+            This image includes:
+            - Software Bill of Materials (SBOM)
+            - Build provenance attestations
+            - Signed with GitHub OIDC
             
             ## 📋 What's Changed
             
-            See the full changelog below.
+            See the detailed changelog below.
