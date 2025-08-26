@@ -40,11 +40,15 @@ jobs:
           cp /tmp/bin/* $HOME/.local/bin/
           chmod +x $HOME/.local/bin/*
           
-          # Agregar al PATH
+          # Agregar al PATH para futuros pasos
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           
+          # Configurar PATH para este paso
+          export PATH="$HOME/.local/bin:$PATH"
+          
           # Verificar instalación
-          buildctl --version
+          ls -la $HOME/.local/bin/
+          $HOME/.local/bin/buildctl --version
 
       - name: Extract version from tag
         id: version
@@ -94,14 +98,17 @@ jobs:
 
       - name: Start BuildKit daemon rootless
         run: |
+          # Crear directorio para datos de buildkit
+          mkdir -p $HOME/.local/share/buildkit
+          
           # Iniciar buildkitd en modo rootless en background
-          buildkitd --addr unix://$HOME/buildkit.sock --root $HOME/.local/share/buildkit --oci-worker-no-process-sandbox &
+          $HOME/.local/bin/buildkitd --addr unix://$HOME/buildkit.sock --root $HOME/.local/share/buildkit --oci-worker-no-process-sandbox &
           
           # Esperar a que el daemon esté listo
-          sleep 5
+          sleep 10
           
           # Verificar conexión
-          buildctl --addr unix://$HOME/buildkit.sock debug info
+          $HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock debug info
 
       - name: Build and push with BuildKit rootless
         id: build
@@ -121,7 +128,7 @@ jobs:
           done
           
           # Construir y subir con BuildKit
-          buildctl --addr unix://$HOME/buildkit.sock build \
+          $HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock build \
             --frontend dockerfile.v0 \
             --local context=. \
             --local dockerfile=. \
@@ -135,7 +142,7 @@ jobs:
           # Obtener el digest de la imagen construida
           MAIN_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1)
           # Obtener digest de la imagen local
-          DIGEST=$(buildctl --addr unix://$HOME/buildkit.sock imagetools inspect --raw $MAIN_TAG | jq -r '.manifests[0].digest // .digest' 2>/dev/null || echo "sha256:unknown")
+          DIGEST=$($HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock imagetools inspect --raw $MAIN_TAG | jq -r '.manifests[0].digest // .digest' 2>/dev/null || echo "sha256:unknown")
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Generate artifact attestation
