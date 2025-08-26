@@ -13,11 +13,12 @@ Este directorio contiene los workflows de GitHub Actions para el proyecto Pangol
 - Manualmente via `workflow_dispatch`
 
 **Lo que hace**:
-- Construye la imagen Docker para arquitecturas `linux/amd64` y `linux/arm64`
+- Construye la imagen Docker usando BuildKit rootless (seguro, moderno)
 - Sube la imagen al GitHub Container Registry (`ghcr.io`)
 - Genera tags apropiados basados en el evento que lo disparó
-- Utiliza cache de GitHub Actions para builds más rápidos
+- Utiliza cache inline para builds más rápidos
 - Genera attestations de seguridad para la imagen
+- Se ejecuta en tu cluster K3s usando ARC runners
 
 **Tags generados**:
 - Para tags semver: `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`
@@ -40,6 +41,25 @@ Este directorio contiene los workflows de GitHub Actions para el proyecto Pangol
 ### 3. `demo.yaml` - Demo con Self-Hosted Runners
 
 **Propósito**: Workflow de demostración para runners auto-hospedados.
+
+## Tecnologías Utilizadas
+
+### BuildKit Rootless para Builds Seguros
+
+Los workflows utilizan **BuildKit** en modo rootless para construir imágenes Docker de manera segura:
+
+**Ventajas de BuildKit Rootless**:
+- 🔒 **Rootless**: No requiere privilegios root para construir imágenes
+- 🛡️ **Seguro**: Desarrollado por el equipo oficial de Docker
+- 🚀 **Moderno**: Tecnología actual y mantenida activamente
+- 📦 **Compatible**: Funciona con cualquier registry estándar
+- ⚡ **Eficiente**: Cache inline y builds paralelos optimizados
+- 🔧 **Flexible**: Soporte completo para multi-stage builds
+
+**Configuración**:
+- Imagen: `moby/buildkit:rootless`
+- Cache inline habilitado para optimización
+- Autenticación via credenciales de GitHub
 
 ## Configuración Requerida
 
