@@ -13,8 +13,6 @@ env:
 jobs:
   build-and-push:
     runs-on: arc-runner-set
-    container:
-      image: moby/buildkit:rootless
     permissions:
       contents: read
       packages: write
@@ -22,6 +20,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup BuildKit rootless
+        run: |
+          # Crear directorio para BuildKit
+          mkdir -p $HOME/.local/bin
+          
+          # Descargar y extraer BuildKit
+          curl -L https://github.com/moby/buildkit/releases/download/v0.16.0/buildkit-v0.16.0.linux-amd64.tar.gz | tar -xz -C /tmp
+          
+          # Copiar binarios
+          cp /tmp/bin/* $HOME/.local/bin/
+          chmod +x $HOME/.local/bin/*
+          
+          # Agregar al PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          
+          # Verificar instalación
+          buildctl --version
 
       - name: Generate tags and labels
         id: meta
@@ -60,10 +76,21 @@ jobs:
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
           echo "labels=$LABELS" >> $GITHUB_OUTPUT
 
-      - name: Set up Docker credentials
+      - name: Set up registry credentials
         run: |
           mkdir -p ~/.docker
           echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > ~/.docker/config.json
+
+      - name: Start BuildKit daemon rootless
+        run: |
+          # Iniciar buildkitd en modo rootless en background
+          buildkitd --addr unix://$HOME/buildkit.sock --root $HOME/.local/share/buildkit --oci-worker-no-process-sandbox &
+          
+          # Esperar a que el daemon esté listo
+          sleep 5
+          
+          # Verificar conexión
+          buildctl --addr unix://$HOME/buildkit.sock debug info
 
       - name: Build and push with BuildKit rootless
         id: build
@@ -83,7 +110,7 @@ jobs:
           done
           
           # Construir y subir con BuildKit
-          buildctl-daemonless.sh build \
+          buildctl --addr unix://$HOME/buildkit.sock build \
             --frontend dockerfile.v0 \
             --local context=. \
             --local dockerfile=. \
@@ -95,9 +122,10 @@ jobs:
         id: digest
         run: |
           # Obtener el digest de la imagen construida
-          MAIN_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n1)
-          DIGEST=$(buildctl-daemonless.sh imagetools inspect --raw $MAIN_TAG | sha256sum | cut -d' ' -f1)
-          echo "digest=sha256:$DIGEST" >> $GITHUB_OUTPUT
+          MAIN_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1)
+          # Obtener digest de la imagen local
+          DIGEST=$(buildctl --addr unix://$HOME/buildkit.sock imagetools inspect --raw $MAIN_TAG | jq -r '.manifests[0].digest // .digest' 2>/dev/null || echo "sha256:unknown")
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
