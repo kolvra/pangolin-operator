@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (optional for manual builds)'
+        required: false
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -14,49 +19,44 @@ jobs:
   build-and-push:
     runs-on: arc-runner-set
     permissions:
-      contents: read
+      contents: write
       packages: write
+    
+    container:
+      image: gcr.io/kaniko-project/executor:debug
+      options: --user 0
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup BuildKit rootless
+      - name: Extract version info
+        id: version
         run: |
-          # Crear directorio para BuildKit
-          mkdir -p $HOME/.local/bin
-          
-          # Descargar y extraer BuildKit
-          curl -L https://github.com/moby/buildkit/releases/download/v0.16.0/buildkit-v0.16.0.linux-amd64.tar.gz | tar -xz -C /tmp
-          
-          # Copiar binarios
-          cp /tmp/bin/* $HOME/.local/bin/
-          chmod +x $HOME/.local/bin/*
-          
-          # Agregar al PATH para futuros pasos
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          
-          # Configurar PATH para este paso
-          export PATH="$HOME/.local/bin:$PATH"
-          
-          # Verificar instalación
-          ls -la $HOME/.local/bin/
-          $HOME/.local/bin/buildctl --version
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+            VERSION="${{ github.event.inputs.tag }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="manual-$(date +%Y%m%d-%H%M%S)"
+          fi
+          VERSION_CLEAN=${VERSION#v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_clean=${VERSION_CLEAN}" >> $GITHUB_OUTPUT
+          echo "is_release=${{ startsWith(github.ref, 'refs/tags/') }}" >> $GITHUB_OUTPUT
 
       - name: Generate tags and labels
         id: meta
         run: |
           IMAGE_NAME="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          VERSION_CLEAN="${{ steps.version.outputs.version_clean }}"
           
-          # Determinar tags basados en el evento
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            # Es un tag, extraer versión
-            VERSION=${GITHUB_REF#refs/tags/}
-            VERSION_CLEAN=${VERSION#v}
-            
-            # Tags semánticos
-            TAGS="$IMAGE_NAME:$VERSION_CLEAN"
-            TAGS="$TAGS,$IMAGE_NAME:latest"
+          # Generar tags basados en el tipo de build
+          if [[ "${{ steps.version.outputs.is_release }}" == "true" ]]; then
+            # Es un release oficial
+            TAGS="$IMAGE_NAME:$VERSION_CLEAN,$IMAGE_NAME:latest"
             
             # Si es versión semántica, agregar tags adicionales
             if [[ $VERSION_CLEAN =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -65,8 +65,11 @@ jobs:
               TAGS="$TAGS,$IMAGE_NAME:$MAJOR,$IMAGE_NAME:$MINOR"
             fi
           else
-            # Workflow manual, solo latest
-            TAGS="$IMAGE_NAME:latest"
+            # Build manual o con tag custom
+            TAGS="$IMAGE_NAME:$VERSION_CLEAN"
+            if [[ "$VERSION_CLEAN" != "latest" && "$VERSION_CLEAN" != manual-* ]]; then
+              TAGS="$TAGS,$IMAGE_NAME:latest"
+            fi
           fi
           
           # Labels estándar OCI
@@ -82,57 +85,43 @@ jobs:
 
       - name: Set up registry credentials
         run: |
-          mkdir -p ~/.docker
-          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > ~/.docker/config.json
+          mkdir -p /kaniko/.docker
+          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > /kaniko/.docker/config.json
 
-      - name: Start BuildKit daemon rootless
+      - name: Build and push with Kaniko
         run: |
-          # Crear directorio para datos de buildkit
-          mkdir -p $HOME/.local/share/buildkit
-          
-          # Iniciar buildkitd en modo rootless en background
-          $HOME/.local/bin/buildkitd --addr unix://$HOME/buildkit.sock --root $HOME/.local/share/buildkit --oci-worker-no-process-sandbox &
-          
-          # Esperar a que el daemon esté listo
-          sleep 10
-          
-          # Verificar conexión
-          $HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock debug info
-
-      - name: Build and push with BuildKit rootless
-        id: build
-        run: |
-          # Preparar tags para BuildKit
+          # Preparar argumentos para Kaniko
           IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-          TAG_ARGS=""
+          DESTINATIONS=""
           for tag in "${TAG_ARRAY[@]}"; do
-            TAG_ARGS="$TAG_ARGS --output type=image,name=$tag,push=true"
+            DESTINATIONS="$DESTINATIONS --destination=$tag"
           done
           
-          # Preparar labels para BuildKit
+          # Preparar labels para Kaniko
           IFS=',' read -ra LABEL_ARRAY <<< "${{ steps.meta.outputs.labels }}"
           LABEL_ARGS=""
           for label in "${LABEL_ARRAY[@]}"; do
-            LABEL_ARGS="$LABEL_ARGS --opt label:$label"
+            LABEL_ARGS="$LABEL_ARGS --label=$label"
           done
           
-          # Construir y subir con BuildKit
-          $HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock build \
-            --frontend dockerfile.v0 \
-            --local context=. \
-            --local dockerfile=. \
-            --opt build-arg:BUILDKIT_INLINE_CACHE=1 \
+          # Construir y subir con Kaniko
+          /kaniko/executor \
+            --context=/github/workspace \
+            --dockerfile=/github/workspace/Dockerfile \
+            --cache=true \
+            --cache-ttl=24h \
+            --build-arg=BUILDKIT_INLINE_CACHE=1 \
             $LABEL_ARGS \
-            $TAG_ARGS
+            $DESTINATIONS
 
       - name: Get image digest
         id: digest
         run: |
-          # Obtener el digest de la imagen construida
+          # Obtener el primer tag construido para extraer el digest
           MAIN_TAG=$(echo "${{ steps.meta.outputs.tags }}" | cut -d',' -f1)
-          # Obtener digest de la imagen local
-          DIGEST=$($HOME/.local/bin/buildctl --addr unix://$HOME/buildkit.sock imagetools inspect --raw $MAIN_TAG | jq -r '.manifests[0].digest // .digest' 2>/dev/null || echo "sha256:unknown")
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "main_tag=$MAIN_TAG" >> $GITHUB_OUTPUT
+          # Por ahora usamos un placeholder hasta que Kaniko exponga el digest
+          echo "digest=sha256:placeholder" >> $GITHUB_OUTPUT
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
@@ -140,3 +129,32 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: true
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.is_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🐳 Docker Images
+            
+            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_clean }}`
+            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest`
+            
+            ## 🚀 Installation
+            
+            ```bash
+            # Pull the image
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_clean }}
+            
+            # Deploy to Kubernetes
+            kubectl apply -f https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/deployment.yaml
+            ```
+            
+            ## 📋 What's Changed
+            
+            See the full changelog below.

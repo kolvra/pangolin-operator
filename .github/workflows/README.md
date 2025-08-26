@@ -4,62 +4,51 @@ Este directorio contiene los workflows de GitHub Actions para el proyecto Pangol
 
 ## Workflows Disponibles
 
-### 1. `docker-build-push.yml` - Build y Push Automático
+### 1. `docker-build-push.yml` - Build y Push Unificado
 
-**Propósito**: Construye y sube imágenes Docker automáticamente para diferentes eventos.
+**Propósito**: Workflow único que maneja tanto builds manuales como releases oficiales.
 
 **Se ejecuta cuando**:
-- Se crean tags que empiecen con `v`
-- Manualmente via `workflow_dispatch`
+- Se crean tags que empiecen con `v` (release automático)
+- Manualmente via `workflow_dispatch` (con tag opcional)
 
 **Lo que hace**:
-- Construye la imagen Docker usando BuildKit rootless (seguro, moderno)
+- Construye la imagen Docker usando **Kaniko** (rootless, diseñado para Kubernetes)
 - Sube la imagen al GitHub Container Registry (`ghcr.io`)
 - Genera tags apropiados basados en el evento que lo disparó
-- Utiliza cache inline para builds más rápidos
+- Utiliza cache de Kaniko para builds más rápidos
 - Genera attestations de seguridad para la imagen
 - Se ejecuta en tu cluster K3s usando ARC runners
+- **Crea releases de GitHub automáticamente** para tags oficiales
 
 **Tags generados**:
-- Para tags semver: `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`
-- Para ejecución manual: `latest`
+- **Para releases** (tags `v*`): `v1.2.3`, `1.2.3`, `1.2`, `1`, `latest`
+- **Para manual con tag**: `custom-tag`, `latest` (si no es un tag especial)
+- **Para manual sin tag**: `manual-YYYYMMDD-HHMMSS`
 
-### 2. `release.yml` - Releases
-
-**Propósito**: Workflow especializado para crear releases oficiales.
-
-**Se ejecuta cuando**:
-- Se crea un tag con formato `v*.*.*` (ej: `v1.0.0`)
-- Manualmente especificando un tag
-
-**Lo que hace**:
-- Todo lo del workflow anterior, pero enfocado en releases
-- Crea un release de GitHub automáticamente
-- Genera notas de release automáticas
-- Incluye información de las imágenes Docker en las notas
-
-### 3. `demo.yaml` - Demo con Self-Hosted Runners
+### 2. `demo.yaml` - Demo con Self-Hosted Runners
 
 **Propósito**: Workflow de demostración para runners auto-hospedados.
 
 ## Tecnologías Utilizadas
 
-### BuildKit Rootless para Builds Seguros
+### Kaniko para Builds Rootless en Kubernetes
 
-Los workflows utilizan **BuildKit** en modo rootless para construir imágenes Docker de manera segura:
+El workflow utiliza **Kaniko** para construir imágenes Docker de manera segura en contenedores:
 
-**Ventajas de BuildKit Rootless**:
-- 🔒 **Rootless**: No requiere privilegios root para construir imágenes
-- 🛡️ **Seguro**: Desarrollado por el equipo oficial de Docker
-- 🚀 **Moderno**: Tecnología actual y mantenida activamente
+**Ventajas de Kaniko**:
+- 🔒 **Rootless**: No requiere privilegios root ni Docker daemon
+- 🛡️ **Kubernetes-native**: Diseñado específicamente para contenedores
+- 🚀 **Simple**: Una sola imagen con todas las herramientas necesarias
 - 📦 **Compatible**: Funciona con cualquier registry estándar
-- ⚡ **Eficiente**: Cache inline y builds paralelos optimizados
-- 🔧 **Flexible**: Soporte completo para multi-stage builds
+- ⚡ **Eficiente**: Cache integrado y builds optimizados
+- 🔧 **Reliable**: Mantenido activamente por Google
 
 **Configuración**:
-- Imagen: `moby/buildkit:rootless`
-- Cache inline habilitado para optimización
+- Imagen: `gcr.io/kaniko-project/executor:debug`
+- Cache habilitado con TTL de 24 horas
 - Autenticación via credenciales de GitHub
+- Ejecuta como usuario root dentro del contenedor (seguro)
 
 ## Configuración Requerida
 
@@ -78,12 +67,20 @@ Los workflows requieren estos permisos (ya configurados en los archivos):
 
 ### Para Construcción Manual
 
+#### Opción 1: Sin tag específico
+1. Ve a Actions en tu repositorio de GitHub
+2. Selecciona "Build and Push Docker Image"
+3. Haz clic en "Run workflow" (deja el campo tag vacío)
+4. La imagen estará disponible en `ghcr.io/[usuario]/[repo]:manual-YYYYMMDD-HHMMSS`
+
+#### Opción 2: Con tag personalizado
 1. Ve a Actions en tu repositorio de GitHub
 2. Selecciona "Build and Push Docker Image"
 3. Haz clic en "Run workflow"
-4. La imagen estará disponible en `ghcr.io/[usuario]/[repo]:latest`
+4. Introduce tu tag personalizado (ej: `dev`, `test`, `feature-xyz`)
+5. La imagen estará disponible en `ghcr.io/[usuario]/[repo]:tu-tag`
 
-### Para Crear un Release
+### Para Crear un Release Oficial
 
 ```bash
 # Crear y subir un tag
@@ -92,9 +89,10 @@ git push origin v1.0.0
 ```
 
 Esto automáticamente:
-1. Construirá la imagen Docker
-2. La subirá con tags `v1.0.0`, `1.0.0`, `1.0`, `1`, y `latest`
-3. Creará un release de GitHub con notas automáticas
+1. 🐳 Construirá la imagen Docker con Kaniko
+2. 🏷️ La subirá con tags `v1.0.0`, `1.0.0`, `1.0`, `1`, y `latest`
+3. 📝 Creará un release de GitHub con notas automáticas
+4. 🛡️ Generará attestations de seguridad
 
 ### Para Usar las Imágenes
 
