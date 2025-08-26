@@ -22,10 +22,6 @@ jobs:
       contents: write
       packages: write
     
-    container:
-      image: gcr.io/kaniko-project/executor:debug
-      options: --user 0
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,8 +81,8 @@ jobs:
 
       - name: Set up registry credentials
         run: |
-          mkdir -p /kaniko/.docker
-          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > /kaniko/.docker/config.json
+          mkdir -p $HOME/.docker
+          echo "{\"auths\":{\"${{ env.REGISTRY }}\":{\"username\":\"${{ github.actor }}\",\"password\":\"${{ secrets.GITHUB_TOKEN }}\"}}}" > $HOME/.docker/config.json
 
       - name: Build and push with Kaniko
         run: |
@@ -104,10 +100,26 @@ jobs:
             LABEL_ARGS="$LABEL_ARGS --label=$label"
           done
           
-          # Construir y subir con Kaniko
-          /kaniko/executor \
-            --context=/github/workspace \
-            --dockerfile=/github/workspace/Dockerfile \
+          # Verificar si docker está disponible, si no usar podman
+          if command -v docker >/dev/null 2>&1; then
+            CONTAINER_CMD="docker"
+          elif command -v podman >/dev/null 2>&1; then
+            CONTAINER_CMD="podman"
+          else
+            echo "Neither docker nor podman found. Installing podman..."
+            # Para sistemas basados en Debian/Ubuntu
+            sudo apt-get update && sudo apt-get install -y podman
+            CONTAINER_CMD="podman"
+          fi
+          
+          # Construir y subir con Kaniko usando el runtime disponible
+          $CONTAINER_CMD run --rm \
+            -v $PWD:/workspace \
+            -v $HOME/.docker:/kaniko/.docker:ro \
+            -w /workspace \
+            gcr.io/kaniko-project/executor:debug \
+            --context=/workspace \
+            --dockerfile=/workspace/Dockerfile \
             --cache=true \
             --cache-ttl=24h \
             --build-arg=BUILDKIT_INLINE_CACHE=1 \
