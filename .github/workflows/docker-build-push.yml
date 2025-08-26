@@ -23,16 +23,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract metadata
+      - name: Generate tags and labels
         id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest
+        run: |
+          IMAGE_NAME="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          
+          # Determinar tags basados en el evento
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Es un tag, extraer versión
+            VERSION=${GITHUB_REF#refs/tags/}
+            VERSION_CLEAN=${VERSION#v}
+            
+            # Tags semánticos
+            TAGS="$IMAGE_NAME:$VERSION_CLEAN"
+            TAGS="$TAGS,$IMAGE_NAME:latest"
+            
+            # Si es versión semántica, agregar tags adicionales
+            if [[ $VERSION_CLEAN =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              MAJOR=$(echo $VERSION_CLEAN | cut -d. -f1)
+              MINOR=$(echo $VERSION_CLEAN | cut -d. -f1-2)
+              TAGS="$TAGS,$IMAGE_NAME:$MAJOR,$IMAGE_NAME:$MINOR"
+            fi
+          else
+            # Workflow manual, solo latest
+            TAGS="$IMAGE_NAME:latest"
+          fi
+          
+          # Labels estándar OCI
+          LABELS="org.opencontainers.image.title=${{ github.repository }}"
+          LABELS="$LABELS,org.opencontainers.image.description=Pangolin Operator for Kubernetes"
+          LABELS="$LABELS,org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}"
+          LABELS="$LABELS,org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}"
+          LABELS="$LABELS,org.opencontainers.image.revision=${{ github.sha }}"
+          LABELS="$LABELS,org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
 
       - name: Set up Docker credentials
         run: |
@@ -43,10 +69,17 @@ jobs:
         id: build
         run: |
           # Preparar tags para BuildKit
-          TAGS="${{ steps.meta.outputs.tags }}"
+          IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
           TAG_ARGS=""
-          for tag in $TAGS; do
+          for tag in "${TAG_ARRAY[@]}"; do
             TAG_ARGS="$TAG_ARGS --output type=image,name=$tag,push=true"
+          done
+          
+          # Preparar labels para BuildKit
+          IFS=',' read -ra LABEL_ARRAY <<< "${{ steps.meta.outputs.labels }}"
+          LABEL_ARGS=""
+          for label in "${LABEL_ARRAY[@]}"; do
+            LABEL_ARGS="$LABEL_ARGS --opt label:$label"
           done
           
           # Construir y subir con BuildKit
@@ -55,6 +88,7 @@ jobs:
             --local context=. \
             --local dockerfile=. \
             --opt build-arg:BUILDKIT_INLINE_CACHE=1 \
+            $LABEL_ARGS \
             $TAG_ARGS
 
       - name: Get image digest
