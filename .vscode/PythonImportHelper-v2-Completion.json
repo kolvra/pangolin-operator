@@ -1,0 +1,539 @@
+[
+    {
+        "label": "runpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "runpy",
+        "description": "runpy",
+        "detail": "runpy",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "site",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "site",
+        "description": "site",
+        "detail": "site",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "wraps",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "kopf",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "kopf",
+        "description": "kopf",
+        "detail": "kopf",
+        "documentation": {}
+    },
+    {
+        "label": "structlog",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "structlog",
+        "description": "structlog",
+        "detail": "structlog",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "bin_dir",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pangolin-operator\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "base",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "base = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pangolin-operator\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PATH\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pangolin-operator\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pangolin-operator\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pangolin-operator\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "prev_length",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"../lib/python3.11/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.path[:]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.real_prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "check_health",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching health status: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")\n        elif response.status_code == 404:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "get_orgs",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def get_orgs():\n    try:\n        response = requests.get(ORGS_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"data\", None).get(\"orgs\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching organizations: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")\n        if response.status_code == 403:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "get_sites",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def get_sites(organization: str):\n    try:\n        response = requests.get(SITES_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"data\", None).get(\"sites\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching sites for organization {organization}: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")\n        elif response.status_code == 403:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "get_resources",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def get_resources(organization: str):\n    try:\n        response = requests.get(RESOURCES_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"data\", None).get(\"resources\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching resources for organization {organization}: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")\n        elif response.status_code == 403:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "get_domains",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def get_domains(organization: str):\n    try:\n        response = requests.get(DOMAINS_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"data\", None).get(\"domains\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching domains for organization {organization}: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")\n        elif response.status_code == 403:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "disable_sso",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def disable_sso(resource_id: str):\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}\"\n    try:\n        response = requests.post(url, headers=HEADERS, json={\n                                 \"sso\": False}, timeout=10)\n        response.raise_for_status()\n        return response.json()\n    except requests.RequestException as e:\n        print(f\"Error disabling SSO for resource {resource_id}: {e}\")\n        return None",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "create_resource",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def create_resource(organization: str, site_id: str, resource_data: dict, sso: bool = False):\n    url = f\"{PANGOLIN_API_URL}/org/{organization}/site/{site_id}/resource\"\n    try:\n        response = requests.put(url, headers=HEADERS,\n                                json=resource_data, timeout=10)\n        response.raise_for_status()\n        # If SSO is enabled, return the JSON response; otherwise, update the SSO flag\n        resource_created = response.json().get(\"data\", None)\n        if sso:\n            return resource_created",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "add_target_to_resource",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def add_target_to_resource(resource_id: str, target_data: dict):\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}/target\"\n    try:\n        response = requests.put(url, headers=HEADERS,\n                                json=target_data, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"data\", None)\n    except requests.RequestException as e:\n        print(f\"Error adding target to resource {resource_id}: {e}\")\n        return None",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "delete_resource",
+        "kind": 2,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "def delete_resource(resource_id: str):\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}\"\n    try:\n        response = requests.delete(url, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        success = response.json().get(\"success\", None)\n        if success:\n            return True\n        else:\n            return False",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "PANGOLIN_API_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "PANGOLIN_API_URL = \"https://api.mx-central-2.sparkfly.cloud/v1\"\nAPI_TOKEN = \"bz5ytqlh41mitm7.6455m6z3vpbfed6unw4hfozcacbjjjyc7mn3aqyg\"\nORGANIZATION_ID = \"sparkfly\"\nSITE_ID = \"1\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\nHEALTH_URL = f\"{PANGOLIN_API_URL}\"",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "API_TOKEN",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "API_TOKEN = \"bz5ytqlh41mitm7.6455m6z3vpbfed6unw4hfozcacbjjjyc7mn3aqyg\"\nORGANIZATION_ID = \"sparkfly\"\nSITE_ID = \"1\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\nHEALTH_URL = f\"{PANGOLIN_API_URL}\"\nORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "ORGANIZATION_ID",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "ORGANIZATION_ID = \"sparkfly\"\nSITE_ID = \"1\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\nHEALTH_URL = f\"{PANGOLIN_API_URL}\"\nORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"\nSITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "SITE_ID",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "SITE_ID = \"1\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\nHEALTH_URL = f\"{PANGOLIN_API_URL}\"\nORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"\nSITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"\nRESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "HEADERS",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "HEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\nHEALTH_URL = f\"{PANGOLIN_API_URL}\"\nORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"\nSITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"\nRESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\nDOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "HEALTH_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "HEALTH_URL = f\"{PANGOLIN_API_URL}\"\nORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"\nSITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"\nRESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\nDOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"\ndef check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "ORGS_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "ORGS_URL = f\"{PANGOLIN_API_URL}/orgs\"\nSITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"\nRESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\nDOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"\ndef check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)\n    except requests.RequestException as e:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "SITES_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "SITES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/sites\"\nRESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\nDOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"\ndef check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching health status: {e}\")",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "RESOURCES_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "RESOURCES_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\nDOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"\ndef check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching health status: {e}\")\n        if response.status_code == 401:",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "DOMAINS_URL",
+        "kind": 5,
+        "importPath": "old.main",
+        "description": "old.main",
+        "peekOfCode": "DOMAINS_URL = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/domains\"\ndef check_health():\n    try:\n        response = requests.get(HEALTH_URL, headers=HEADERS, timeout=10)\n        response.raise_for_status()\n        return response.json().get(\"message\", None)\n    except requests.RequestException as e:\n        print(f\"Error fetching health status: {e}\")\n        if response.status_code == 401:\n            print(\"Error: Unauthorized access. Please check your API token.\")",
+        "detail": "old.main",
+        "documentation": {}
+    },
+    {
+        "label": "validate_environment",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def validate_environment():\n    \"\"\"Validate that all required environment variables are set.\"\"\"\n    required_vars = [\n        \"PANGOLIN_API_URL\",\n        \"PANGOLIN_API_TOKEN\",\n        \"PANGOLIN_ORG\",\n        \"PANGOLIN_SITE_ID\",\n        \"PANGOLIN_DOMAIN_ID\"\n    ]\n    missing_vars = []",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "retry_with_backoff",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def retry_with_backoff(max_retries=3, base_delay=1):\n    \"\"\"Decorator para retry con backoff exponencial.\"\"\"\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            for attempt in range(max_retries):\n                try:\n                    return func(*args, **kwargs)\n                except requests.RequestException as e:\n                    if attempt == max_retries - 1:",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "validate_spec",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def validate_spec(spec):\n    \"\"\"Validate the resource specification.\"\"\"\n    required_fields = ['domain', 'subdomain', 'service']\n    for field in required_fields:\n        if field not in spec:\n            raise kopf.PermanentError(f\"Missing required field: {field}\")\n    # Validar formato de subdomain\n    subdomain = spec['subdomain']\n    if not subdomain.replace('-', '').replace('_', '').isalnum():\n        raise kopf.PermanentError(f\"Invalid subdomain format: {subdomain}\")",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "create_resource",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def create_resource(resource_data: dict, sso: bool = False):\n    \"\"\"Create a new resource in Pangolin API and optionally disable SSO.\"\"\"\n    if DRY_RUN:\n        structlog.get_logger().info(\"DRY RUN: Would create resource\",\n                                    resource_data=resource_data)\n        return {\"resourceId\": \"dry-run-id\", \"fake\": True}\n    url = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/site/{SITE_ID}/resource\"\n    response = requests.put(url, headers=HEADERS,\n                            json=resource_data, timeout=10)\n    response.raise_for_status()",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "disable_sso",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def disable_sso(resource_id: str):\n    \"\"\"Disable SSO for a resource in Pangolin API.\"\"\"\n    if DRY_RUN:\n        structlog.get_logger().info(\"DRY RUN: Would disable SSO\", resource_id=resource_id)\n        return {\"resourceId\": resource_id, \"sso\": False}\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}\"\n    response = requests.post(url, headers=HEADERS, json={\n                             \"sso\": False}, timeout=10)\n    response.raise_for_status()\n    return response.json().get(\"data\", None)",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "add_target_to_resource",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def add_target_to_resource(resource_id: str, target_data: dict):\n    \"\"\"Add a target to a resource in Pangolin API.\"\"\"\n    if DRY_RUN:\n        structlog.get_logger().info(\"DRY RUN: Would add target\",\n                                    resource_id=resource_id, target_data=target_data)\n        return {\"success\": True}\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}/target\"\n    response = requests.put(url, headers=HEADERS, json=target_data, timeout=10)\n    response.raise_for_status()\n    return response.json().get(\"data\", None)",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "delete_resource",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def delete_resource(resource_id: str):\n    \"\"\"Delete a resource in Pangolin API.\"\"\"\n    if DRY_RUN:\n        structlog.get_logger().info(\"DRY RUN: Would delete resource\", resource_id=resource_id)\n        return True\n    url = f\"{PANGOLIN_API_URL}/resource/{resource_id}\"\n    response = requests.delete(url, headers=HEADERS, timeout=10)\n    response.raise_for_status()\n    return response.json().get(\"success\", False)\n@retry_with_backoff()",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "get_resources",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def get_resources():\n    \"\"\"Get all resources from Pangolin API.\"\"\"\n    if DRY_RUN:\n        return []\n    url = f\"{PANGOLIN_API_URL}/org/{ORGANIZATION_ID}/resources\"\n    response = requests.get(url, headers=HEADERS, timeout=10)\n    response.raise_for_status()\n    return response.json().get(\"data\", {}).get(\"resources\", [])\n@kopf.on.create('pangolin.sparkfly.dev', 'v1alpha1', 'pangoliningresses')\ndef create_fn(spec, name, namespace, patch, logger, **_kwargs):",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "create_fn",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def create_fn(spec, name, namespace, patch, logger, **_kwargs):\n    \"\"\"Create a new resource in Pangolin API.\"\"\"\n    # Usar un logger estructurado local, no reasignar el parámetro\n    struct_logger = structlog.get_logger().bind(\n        resource_name=name,\n        namespace=namespace,\n        fqdn=f\"{spec['subdomain']}.{spec['domain']}\"\n    )\n    try:\n        # Validar spec",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "update_fn",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def update_fn(spec, old, new, name, namespace, patch, logger, **_kwargs):\n    \"\"\"Update a resource in Pangolin API when spec changes.\"\"\"\n    struct_logger = structlog.get_logger().bind(\n        resource_name=name,\n        namespace=namespace,\n        fqdn=f\"{spec['subdomain']}.{spec['domain']}\"\n    )\n    try:\n        validate_spec(spec)\n        # Por simplicidad, por ahora recreamos el recurso si cambió algo importante",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "delete_fn",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def delete_fn(spec, name, namespace, patch, logger, **_kwargs):\n    \"\"\"Delete a resource in Pangolin API.\"\"\"\n    struct_logger = structlog.get_logger().bind(\n        resource_name=name,\n        namespace=namespace,\n        fqdn=f\"{spec['subdomain']}.{spec['domain']}\"\n    )\n    try:\n        subdomain = spec['subdomain']\n        domain = spec['domain']",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "health_check",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def health_check(**_kwargs):\n    \"\"\"Check if Pangolin API is accessible.\"\"\"\n    try:\n        # Simple health check - intentar acceder a la API\n        response = requests.get(\n            f\"{PANGOLIN_API_URL}\", headers=HEADERS, timeout=5)\n        return response.status_code == 200\n    except requests.RequestException:\n        return False\n@kopf.on.probe(id='operator-metrics')",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "metrics_probe",
+        "kind": 2,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "def metrics_probe(**_kwargs):\n    \"\"\"Expose basic metrics.\"\"\"\n    return {\n        'resources_created': metrics['resources_created'],\n        'resources_deleted': metrics['resources_deleted'],\n        'resources_updated': metrics['resources_updated'],\n        'api_errors': metrics['api_errors']\n    }",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "PANGOLIN_API_URL",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "PANGOLIN_API_URL = os.getenv(\"PANGOLIN_API_URL\")\nAPI_TOKEN = os.getenv(\"PANGOLIN_API_TOKEN\")\nORGANIZATION_ID = os.getenv(\"PANGOLIN_ORG\")\nSITE_ID = os.getenv(\"PANGOLIN_SITE_ID\")\nDOMAIN_ID = os.getenv(\"PANGOLIN_DOMAIN_ID\")\nDRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "API_TOKEN",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "API_TOKEN = os.getenv(\"PANGOLIN_API_TOKEN\")\nORGANIZATION_ID = os.getenv(\"PANGOLIN_ORG\")\nSITE_ID = os.getenv(\"PANGOLIN_SITE_ID\")\nDOMAIN_ID = os.getenv(\"PANGOLIN_DOMAIN_ID\")\nDRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "ORGANIZATION_ID",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "ORGANIZATION_ID = os.getenv(\"PANGOLIN_ORG\")\nSITE_ID = os.getenv(\"PANGOLIN_SITE_ID\")\nDOMAIN_ID = os.getenv(\"PANGOLIN_DOMAIN_ID\")\nDRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\n# Métricas básicas",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "SITE_ID",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "SITE_ID = os.getenv(\"PANGOLIN_SITE_ID\")\nDOMAIN_ID = os.getenv(\"PANGOLIN_DOMAIN_ID\")\nDRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\n# Métricas básicas\nmetrics = {",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "DOMAIN_ID",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "DOMAIN_ID = os.getenv(\"PANGOLIN_DOMAIN_ID\")\nDRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\n# Métricas básicas\nmetrics = {\n    'resources_created': 0,",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "DRY_RUN",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "DRY_RUN = os.getenv(\"DRY_RUN\", \"false\").lower() == \"true\"\nHEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\n# Métricas básicas\nmetrics = {\n    'resources_created': 0,\n    'resources_deleted': 0,",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "HEADERS",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "HEADERS = {\n    \"Authorization\": f\"Bearer {API_TOKEN}\",\n    \"Content-Type\": \"application/json\",\n    \"accept\": \"*/*\"\n}\n# Métricas básicas\nmetrics = {\n    'resources_created': 0,\n    'resources_deleted': 0,\n    'resources_updated': 0,",
+        "detail": "handler",
+        "documentation": {}
+    },
+    {
+        "label": "metrics",
+        "kind": 5,
+        "importPath": "handler",
+        "description": "handler",
+        "peekOfCode": "metrics = {\n    'resources_created': 0,\n    'resources_deleted': 0,\n    'resources_updated': 0,\n    'api_errors': 0\n}\ndef retry_with_backoff(max_retries=3, base_delay=1):\n    \"\"\"Decorator para retry con backoff exponencial.\"\"\"\n    def decorator(func):\n        @wraps(func)",
+        "detail": "handler",
+        "documentation": {}
+    }
+]
