@@ -91,8 +91,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: mode=max
-          sbom: true
+          provenance: false
+          sbom: false
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
@@ -132,31 +132,6 @@ jobs:
           path: trivy-results.sarif
           retention-days: 30
 
-      - name: Generate artifact attestation
-        if: github.event_name != 'pull_request'
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: true
-
-      - name: Generate SBOM
-        if: github.event_name != 'pull_request'
-        uses: anchore/sbom-action@v0
-        with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
-          format: spdx-json
-          output-file: sbom.spdx.json
-
-      - name: Generate SBOM attestation
-        if: github.event_name != 'pull_request'
-        uses: actions/attest-sbom@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          sbom-path: sbom.spdx.json
-          push-to-registry: true
-
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
@@ -192,10 +167,9 @@ jobs:
             
             ### 🔒 Security
             
-            This image includes:
-            - Software Bill of Materials (SBOM)
-            - Build provenance attestations
-            - Signed with GitHub OIDC
+            This release includes:
+            - Vulnerability scanning with Trivy
+            - Multi-architecture support
             
             ## 📋 What's Changed
             
