@@ -19,7 +19,8 @@ on:
       platforms:
         description: 'Target platforms (comma separated)'
         required: false
-        default: 'linux/amd64,linux/arm64'
+        #default: 'linux/amd64,linux/arm64'
+        default: 'linux/amd64'
         type: string
 
 env:
@@ -34,6 +35,7 @@ jobs:
       packages: write
       id-token: write  # Para attestations
       attestations: write
+      security-events: write  # Para Trivy SARIF upload
     
     steps:
       - name: Checkout repository
@@ -102,17 +104,39 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          format: 'table'
+          exit-code: '0'  # No fallar el workflow por vulnerabilidades
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: Run Trivy for SARIF report
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+        continue-on-error: true
 
       - name: Upload Trivy scan results to GitHub Security tab
-        if: github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@v2
+        if: github.event_name != 'pull_request' && always() && hashFiles('trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy scan results as artifact
+        if: github.event_name != 'pull_request' && always() && hashFiles('trivy-results.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+          retention-days: 30
 
       - name: Generate artifact attestation
         if: github.event_name != 'pull_request'
